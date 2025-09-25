@@ -14,6 +14,7 @@ beforeEach(async () => {
   await Blog.insertMany(helper.initialBlogs)
 })
 
+
 test.only('blogs are returned as json', async () => {
   await api
     .get('/api/blogs')
@@ -21,11 +22,13 @@ test.only('blogs are returned as json', async () => {
     .expect('Content-Type', /application\/json/)
 })
 
+
 test.only('all blogs are returned', async () => {
   const response = await api.get('/api/blogs')
 
   assert.strictEqual(response.body.length, helper.initialBlogs.length)
 })
+
 
 test('a specific blog is within the returned blogs', async () => {
   const response = await api.get('/api/blogs')
@@ -33,6 +36,7 @@ test('a specific blog is within the returned blogs', async () => {
   const titles = response.body.map((e) => e.title)
   assert(titles.includes('First blog'))
 })
+
 
 test('a valid blog can be added ', async () => {
   const newBlog = {
@@ -55,6 +59,7 @@ test('a valid blog can be added ', async () => {
   assert(titles.includes('Test blog'))
 })
 
+
 test('blog without content is not added', async () => {
   const newBlog = {
     likes: 6
@@ -70,11 +75,10 @@ test('blog without content is not added', async () => {
   assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
 })
 
+
 test('a specific blog can be viewed', async () => {
   const blogsAtStart = await helper.blogsInDb()
   const blogToView = blogsAtStart[0]
-  console.log(blogToView)
-
 
   const resultBlog = await api
     .get(`/api/blogs/${blogToView.id}`)
@@ -83,6 +87,7 @@ test('a specific blog can be viewed', async () => {
 
   assert.deepStrictEqual(resultBlog.body, blogToView)
 })
+
 
 test('a blog can be deleted', async () => {
   const blogsAtStart = await helper.blogsInDb()
@@ -100,6 +105,7 @@ test('a blog can be deleted', async () => {
   assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length - 1)
 })
 
+
 test('a blog identifier is defined as id', async () => {
   const response = await api.get('/api/blogs')
 
@@ -108,6 +114,7 @@ test('a blog identifier is defined as id', async () => {
     assert.ok(blog.id)
   })
 })
+
 
 test('if likes property is missing, it will default to 0', async () => {
   const newBlog = {
@@ -124,6 +131,31 @@ test('if likes property is missing, it will default to 0', async () => {
 
   assert.strictEqual(response.body.likes, 0)
 })
+
+
+test('a blog can be updated', async () => {
+  const blogsAtStart = await helper.blogsInDb()
+  const blogToUpdate = blogsAtStart[0]
+
+  const updatedBlogData = {
+    title: 'Updated blog title',
+    author: 'Updated Author',
+    url: 'https://updatedblogurl.com',
+    likes: 15
+  }
+
+  const response = await api
+    .put(`/api/blogs/${blogToUpdate.id}`)
+    .send(updatedBlogData)
+    .expect(200)
+    .expect('Content-Type', /application\/json/)
+
+  assert.strictEqual(response.body.title, updatedBlogData.title)
+  assert.strictEqual(response.body.author, updatedBlogData.author)
+  assert.strictEqual(response.body.url, updatedBlogData.url)
+  assert.strictEqual(response.body.likes, updatedBlogData.likes)
+})
+
 
 after(async () => {
   await mongoose.connection.close()
